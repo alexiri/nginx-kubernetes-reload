@@ -12,20 +12,35 @@ watches=${WATCH_PATHS:-"/etc/nginx/nginx.conf"}
 echo "Setting up watches for ${watches[@]}"
 
 {
-  echo $nginx_pid
-  inotifywait -e modify,move,create,delete --timefmt '%d/%m/%y %H:%M' -m --format '%T' \
-  ${watches[@]} | while read date time; do
+  calc_hash() {
+    for i in `find "$1" -type f | sort`; do echo $i; ls -l $i; cat $i; done | sha512sum
+  }
 
-    echo "At ${time} on ${date}, config file update detected"
-    nginx -t
-    if [ $? -ne 0 ]; then
-      echo "ERROR: New configuration is invalid!!"
-    else
-      echo "New configuration is valid, reloading nginx"
-      nginx -s reload
+  START=`calc_hash ${watches[@]}`
+
+  echo $nginx_pid
+  while true; do
+    NOW=`calc_hash ${watches[@]}`
+
+    if [[ "$START" != "$NOW" ]]; then
+      START=$NOW
+      echo; echo
+      echo "At `date`, config file update detected"
+
+      nginx -t
+      if [ $? -ne 0 ]; then
+        echo "ERROR: New configuration is invalid!!"
+      else
+        echo "New configuration is valid, reloading nginx"
+        nginx -s reload
+      fi
+
+      echo; echo
     fi
+
+    sleep 10s
   done
-  echo "inotifywait failed, killing nginx"
+  echo "poor man's inotifywait failed, killing nginx"
 
   kill -TERM $nginx_pid
 } &
