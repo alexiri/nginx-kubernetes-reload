@@ -1,4 +1,4 @@
-FROM nginx:1.15-alpine
+FROM nginx:1.16-alpine
 MAINTAINER Ross Kukulinski <ross@kukulinski.com>
 
 ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.1/dumb-init_1.2.1_amd64 /usr/local/bin/dumb-init
@@ -7,6 +7,7 @@ ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 
 # install inotify
 RUN apk update && apk add inotify-tools bash
+RUN apk add nginx-mod-http-headers-more
 
 COPY nginx-reload.sh /app/nginx-reload.sh
 RUN chmod +x /app/nginx-reload.sh
