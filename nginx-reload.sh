@@ -10,6 +10,7 @@ nginx_pid=$!
 watches=${WATCH_PATHS:-"/etc/nginx/nginx.conf"}
 
 echo "Setting up watches for ${watches[@]}"
+echo
 
 {
   calc_hash() {
